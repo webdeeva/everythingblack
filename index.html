@@ -1,35 +1,56 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Web3 Browser</title>
+    <title>Everything Black Browser</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="browser-container">
+        <div class="titlebar">
+            <div class="titlebar-text">Everything Black Browser</div>
+            <div class="titlebar-controls">
+                <button class="titlebar-button" id="minimize-button"><i class="fas fa-minus"></i></button>
+                <button class="titlebar-button" id="maximize-button"><i class="fas fa-square"></i></button>
+                <button class="titlebar-button" id="close-button"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
         <div class="toolbar">
             <div class="navigation-controls">
-                <button id="back-button">←</button>
-                <button id="forward-button">→</button>
-                <button id="refresh-button">↻</button>
+                <button id="back-button"><i class="fas fa-chevron-left"></i></button>
+                <button id="forward-button"><i class="fas fa-chevron-right"></i></button>
+                <button id="refresh-button"><i class="fas fa-sync"></i></button>
                 <input type="text" id="url-bar" placeholder="Enter URL">
-                <button id="go-button">Go</button>
-                <button id="bookmark-button">⭐</button>
-                <button id="devtools-button">🛠</button>
+                <button id="go-button"><i class="fas fa-arrow-right"></i></button>
+                <button id="bookmark-button"><i class="far fa-star"></i></button>
+                <button id="devtools-button"><i class="fas fa-tools"></i></button>
             </div>
             <div class="tab-controls">
                 <div id="tabs-container"></div>
-                <button id="new-tab-button">+</button>
+                <button id="new-tab-button"><i class="fas fa-plus"></i></button>
             </div>
         </div>
         <div class="main-container">
-            <div class="sidebar">
-                <button id="toggle-bookmarks">Bookmarks</button>
+            <div class="sidebar collapsed">
+                <button id="sidebar-toggle" class="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <button id="toggle-bookmarks" class="sidebar-button">
+                    <span class="icon"><i class="far fa-bookmark"></i></span>
+                    <span class="text">Bookmarks</span>
+                </button>
                 <div id="bookmarks-panel" class="panel"></div>
                 
-                <button id="toggle-history">History</button>
+                <button id="toggle-history" class="sidebar-button">
+                    <span class="icon"><i class="fas fa-history"></i></span>
+                    <span class="text">History</span>
+                </button>
                 <div id="history-panel" class="panel"></div>
                 
-                <button id="toggle-web3">Web3</button>
+                <button id="toggle-web3" class="sidebar-button">
+                    <span class="icon"><i class="fas fa-cube"></i></span>
+                    <span class="text">Web3</span>
+                </button>
                 <div id="web3-panel" class="panel">
                     <div class="web3-controls">
                         <button id="connect-wallet">Connect Wallet</button>
@@ -43,6 +64,9 @@
                             <button id="update-network">Update Network</button>
                         </div>
                     </div>
+                </div>
+                <div class="sidebar-logo">
+                    <img src="assets/ebwhite.png" alt="Logo">
                 </div>
             </div>
             <div id="webviews-container">

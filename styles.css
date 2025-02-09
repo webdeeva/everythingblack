@@ -24,40 +24,68 @@ html, body {
 }
 
 .toolbar {
-    padding: 10px;
-    background: #f5f5f5;
-    border-bottom: 1px solid #ddd;
+    padding: 10px 10px 0 10px;
+    background: #c44901;
+    display: flex;
+    flex-direction: column;
 }
 
 .navigation-controls {
     display: flex;
     gap: 5px;
-    margin-bottom: 10px;
+    margin-bottom: 30px;
 }
 
 .navigation-controls button {
-    padding: 5px 10px;
-    background: #fff;
-    border: 1px solid #ddd;
+    padding: 8px 12px;
+    background: #933600;
+    border: 1px solid #893200;
     border-radius: 4px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
 }
 
 .navigation-controls button:hover {
-    background: #f0f0f0;
+    background: #7f2e00;
+}
+
+.navigation-controls button i {
+    font-size: 14px;
+    color: #fff;
+}
+
+#bookmark-button i {
+    color: #fff;
+    transition: color 0.2s ease;
+}
+
+#bookmark-button.active i {
+    color: #ffd700;
+    font-weight: 900;
 }
 
 #url-bar {
     flex: 1;
     padding: 5px 10px;
-    border: 1px solid #ddd;
+    border: 1px solid #893200;
     border-radius: 4px;
+    background: #933600;
+    color: #fff;
+}
+
+#url-bar::placeholder {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .tab-controls {
     display: flex;
     gap: 5px;
-    align-items: center;
+    align-items: flex-end;
+    background: #c44901;
+    margin-top: auto;
 }
 
 #tabs-container {
@@ -65,37 +93,180 @@ html, body {
     gap: 2px;
     overflow-x: auto;
     flex: 1;
+    height: 32px;
+    align-items: flex-end;
+    scrollbar-width: none;
+}
+
+#tabs-container::-webkit-scrollbar {
+    display: none;
 }
 
 .tab {
-    padding: 8px 15px;
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px 4px 0 0;
+    padding: 8px 12px;
+    background: linear-gradient(to bottom, #933600, #c44901);
+    border: 1px solid #893200;
+    border-radius: 8px 8px 0 0;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 5px;
-    min-width: 100px;
+    gap: 8px;
+    min-width: 140px;
     max-width: 200px;
+    height: 32px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.tab:hover {
+    background: linear-gradient(to bottom, #7f2e00, #c44901);
 }
 
 .tab.active {
-    background: #e8e8e8;
+    background: linear-gradient(to bottom, #933600, #c44901);
     border-bottom: none;
+    z-index: 1;
+}
+
+.tab-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    color: #fff;
 }
 
 .tab-close {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     border: none;
-    background: #ccc;
-    color: #fff;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.8);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    margin-left: 4px;
+}
+
+.tab-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.tab:hover .tab-close {
+    opacity: 1;
+}
+
+#new-tab-button {
+    padding: 8px;
+    background: #933600;
+    border: 1px solid #893200;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 32px;
+}
+
+#new-tab-button i {
+    font-size: 14px;
+    color: #fff;
+}
+
+/* Title bar styles */
+.titlebar {
+    background: #050505;
+    color: #e55400;
+    -webkit-app-region: drag;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: 13px;
+    font-weight: 500;
+    user-select: none;
+}
+
+.titlebar-text {
+    flex: 1;
+    text-align: center;
+}
+
+.titlebar-controls {
+    display: flex;
+    gap: 6px;
+    -webkit-app-region: no-drag;
+    margin-right: 8px;
+}
+
+.titlebar-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #050505;
+    width: 13px;
+    height: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 9px;
+    transition: all 0.2s ease;
+    border-radius: 50%;
+    position: relative;
+}
+
+#minimize-button {
+    background: #f78513;
+}
+
+#maximize-button {
+    background: #c44901;
+}
+
+#close-button {
+    background: #933600;
+}
+
+.titlebar-button::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+#minimize-button::before {
+    background: rgba(247, 133, 19, 0.2);
+}
+
+#maximize-button::before {
+    background: rgba(196, 73, 1, 0.2);
+}
+
+#close-button::before {
+    background: rgba(147, 54, 0, 0.2);
+}
+
+.titlebar-button:hover::before {
+    opacity: 1;
+}
+
+.titlebar-button i {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    color: #050505;
+}
+
+.titlebar-button:hover i {
+    opacity: 0.8;
 }
 
 .main-container {
@@ -105,33 +276,113 @@ html, body {
 }
 
 .sidebar {
-    width: 250px;
-    background: #f8f8f8;
-    border-right: 1px solid #ddd;
+    background: #050505;
+    border-right: 1px solid #161616;
     padding: 10px;
     display: flex;
     flex-direction: column;
     gap: 10px;
     overflow-y: auto;
+    transition: all 0.3s ease;
+    width: 250px;
+    scrollbar-width: thin;
+    scrollbar-color: #C44901 #161616;
+    position: relative;
+    height: 100%;
 }
 
-.sidebar button {
+.sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #161616;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background-color: #C44901;
+    border-radius: 4px;
+}
+
+.sidebar.collapsed {
+    width: 60px;
+    padding: 10px 5px;
+}
+
+.sidebar-toggle {
     padding: 8px;
-    background: #fff;
-    border: 1px solid #ddd;
+    background: #161616;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-toggle i {
+    font-size: 16px;
+    color: #C44901;
+}
+
+.sidebar-button {
+    padding: 8px;
+    background: #161616;
+    border: none;
     border-radius: 4px;
     cursor: pointer;
     text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: background-color 0.2s ease;
+}
+
+.sidebar-button .icon {
+    min-width: 24px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-button .icon i {
+    font-size: 16px;
+    color: #C44901;
+}
+
+.sidebar-button .text {
+    transition: opacity 0.2s ease;
+    color: #C44901;
+}
+
+.sidebar.collapsed .text {
+    opacity: 0;
+    width: 0;
+    display: none;
+}
+
+.sidebar.collapsed .panel {
+    display: none !important;
+}
+
+.sidebar-button:hover {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .panel {
     display: none;
     padding: 10px;
-    background: #fff;
-    border: 1px solid #ddd;
+    background: #161616;
+    border: none;
     border-radius: 4px;
     margin-top: 5px;
     overflow-y: auto;
+    color: #C44901;
 }
 
 .panel.active {
@@ -146,20 +397,50 @@ html, body {
 
 .network-settings {
     padding: 10px;
-    background: #f5f5f5;
+    background: #161616;
     border-radius: 4px;
 }
 
 .network-settings h3 {
     margin-bottom: 10px;
+    color: #C44901;
 }
 
 .network-settings input {
     width: 100%;
-    padding: 5px;
-    margin-bottom: 5px;
-    border: 1px solid #ddd;
+    padding: 8px;
+    margin-bottom: 8px;
+    border: none;
     border-radius: 4px;
+    background: #050505;
+    color: #C44901;
+}
+
+.network-settings input::placeholder {
+    color: rgba(196, 73, 1, 0.5);
+}
+
+#connect-wallet, #update-network {
+    padding: 8px 12px;
+    background: #C44901;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#connect-wallet:hover, #update-network:hover {
+    background: #d65502;
+}
+
+#wallet-info {
+    color: #fff;
+    margin-top: 8px;
+}
+
+#wallet-info p {
+    margin: 4px 0;
 }
 
 #webviews-container {
@@ -184,27 +465,45 @@ webview.active {
 /* Bookmark and History styles */
 .bookmark, .history-item {
     padding: 8px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .bookmark a, .history-item a {
-    color: #333;
+    color: #C44901;
     text-decoration: none;
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: color 0.2s ease;
+    font-size: 13px;
 }
 
 .bookmark a:hover, .history-item a:hover {
-    color: #007bff;
+    color: #d65502;
 }
 
 .timestamp {
-    font-size: 0.8em;
-    color: #666;
+    font-size: 11px;
+    color: rgba(196, 73, 1, 0.7);
     display: block;
     margin-top: 4px;
+}
+
+.sidebar-logo {
+    margin-top: auto;
+    padding-top: 20px;
+    text-align: center;
+}
+
+.sidebar-logo img {
+    width: 40px;
+    height: auto;
+    opacity: 0.9;
+}
+
+.sidebar.collapsed .sidebar-logo img {
+    width: 30px;
 }
 
 .error {
@@ -214,34 +513,3 @@ webview.active {
     border-radius: 4px;
     margin-top: 5px;
 }
-
-#bookmark-button {
-    opacity: 0.5;
-}
-
-#bookmark-button.active {
-    opacity: 1;
-}
-
-.debug-info {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    z-index: 9999;
-    pointer-events: none;
-    font-family: monospace;
-    white-space: pre;
-}
-
-/* Debug outlines */
-.browser-container { outline: 1px solid rgba(255, 0, 0, 0.2); }
-.toolbar { outline: 1px solid rgba(0, 255, 0, 0.2); }
-.main-container { outline: 1px solid rgba(0, 0, 255, 0.2); }
-.sidebar { outline: 1px solid rgba(255, 255, 0, 0.2); }
-#webviews-container { outline: 1px solid rgba(255, 0, 255, 0.2); }
-webview { outline: 1px solid rgba(0, 255, 255, 0.2); }

@@ -18,7 +18,6 @@ class Browser {
         
         this.initializeElements();
         this.setupEventListeners();
-        this.createDebugInfo();
         this.createNewTab();
         this.loadBookmarks();
     }
@@ -37,6 +36,10 @@ class Browser {
         this.newTabBtn = document.getElementById('new-tab-button');
         this.tabsContainer = document.getElementById('tabs-container');
         this.webviewsContainer = document.querySelector('.webview-wrapper');
+
+        // Sidebar controls
+        this.sidebar = document.querySelector('.sidebar');
+        this.sidebarToggle = document.getElementById('sidebar-toggle');
         
         // Sidebar panels
         this.bookmarksPanel = document.getElementById('bookmarks-panel');
@@ -52,61 +55,6 @@ class Browser {
         this.updateNetworkBtn = document.getElementById('update-network');
     }
 
-    createDebugInfo() {
-        const debugDiv = document.createElement('div');
-        debugDiv.className = 'debug-info';
-        document.body.appendChild(debugDiv);
-
-        const updateDebugInfo = () => {
-            const webview = this.getActiveWebview();
-            const toolbar = document.querySelector('.toolbar');
-            const mainContainer = document.querySelector('.main-container');
-            const webviewsContainer = document.querySelector('.webview-wrapper');
-
-            const getElementInfo = (el) => {
-                if (!el) return 'null';
-                const rect = el.getBoundingClientRect();
-                const computed = window.getComputedStyle(el);
-                return `
-                    Size: ${rect.width.toFixed(0)}x${rect.height.toFixed(0)}
-                    Position: ${rect.left.toFixed(0)},${rect.top.toFixed(0)}
-                    Offset: ${el.offsetWidth}x${el.offsetHeight}
-                    Client: ${el.clientWidth}x${el.clientHeight}
-                    Scroll: ${el.scrollWidth}x${el.scrollHeight}
-                    Style Height: ${computed.height}
-                    Style Display: ${computed.display}
-                `;
-            };
-
-            debugDiv.innerHTML = `
-                Window: ${window.innerWidth}x${window.innerHeight}
-                Document: ${document.documentElement.clientWidth}x${document.documentElement.clientHeight}
-
-                Toolbar:
-                ${getElementInfo(toolbar)}
-
-                Main Container:
-                ${getElementInfo(mainContainer)}
-
-                Webviews Container:
-                ${getElementInfo(webviewsContainer)}
-
-                Active Webview:
-                ${getElementInfo(webview)}
-
-                Active Tab: ${this.activeTabId || 'none'}
-                URL: ${webview ? webview.getURL() : 'none'}
-            `;
-        };
-
-        // Store for use in other methods
-        this.debugDiv = debugDiv;
-        this.updateDebugInfo = updateDebugInfo;
-
-        // Update debug info frequently
-        setInterval(updateDebugInfo, 1000);
-    }
-
     setupEventListeners() {
         // Navigation events
         this.backBtn.addEventListener('click', () => this.getActiveWebview()?.goBack());
@@ -116,6 +64,9 @@ class Browser {
         this.urlBar.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') this.navigateToUrl();
         });
+
+        // Sidebar toggle event
+        this.sidebarToggle.addEventListener('click', () => this.toggleSidebar());
 
         // DevTools event
         this.devToolsBtn.addEventListener('click', () => {
@@ -149,7 +100,7 @@ class Browser {
         this.updateNetworkBtn.addEventListener('click', () => this.updateNetwork());
     }
 
-    createNewTab(url = 'about:blank') {
+    createNewTab(url = 'welcome.html') {
         const tabId = 'tab-' + Date.now();
         
         // Create tab element
@@ -158,7 +109,7 @@ class Browser {
         tab.setAttribute('data-tab-id', tabId);
         tab.innerHTML = `
             <span class="tab-title">New Tab</span>
-            <button class="tab-close">×</button>
+            <button class="tab-close"><i class="fas fa-times"></i></button>
         `;
         
         // Create webview
@@ -248,12 +199,28 @@ class Browser {
     }
 
     togglePanel(panel) {
+        // If sidebar is collapsed, expand it first
+        if (this.sidebar.classList.contains('collapsed')) {
+            this.sidebar.classList.remove('collapsed');
+            this.sidebar.classList.add('expanded');
+        }
+        
         const wasActive = panel.classList.contains('active');
         // Hide all panels
         document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         // Show clicked panel if it wasn't active
         if (!wasActive) {
             panel.classList.add('active');
+        }
+    }
+
+    toggleSidebar() {
+        this.sidebar.classList.toggle('collapsed');
+        this.sidebar.classList.toggle('expanded');
+        
+        // Hide all panels when collapsing
+        if (this.sidebar.classList.contains('collapsed')) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         }
     }
 
@@ -342,6 +309,25 @@ class Browser {
 }
 
 // Initialize browser when DOM is loaded
+// Window controls
+document.getElementById('minimize-button').addEventListener('click', () => {
+    ipcRenderer.send('window-control', 'minimize');
+});
+
+document.getElementById('maximize-button').addEventListener('click', () => {
+    ipcRenderer.send('window-control', 'maximize');
+});
+
+document.getElementById('close-button').addEventListener('click', () => {
+    ipcRenderer.send('window-control', 'close');
+});
+
+ipcRenderer.on('window-maximized', (event, isMaximized) => {
+    document.getElementById('maximize-button').innerHTML = isMaximized ? 
+        '<i class="fas fa-clone"></i>' : 
+        '<i class="fas fa-square"></i>';
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     window.browser = new Browser();
 });

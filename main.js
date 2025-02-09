@@ -10,6 +10,8 @@ function createWindow() {
         height: 800,
         minWidth: 800,
         minHeight: 600,
+        title: 'Everything Black Browser',
+        frame: false,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
@@ -106,4 +108,28 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') app.quit();
+});
+
+// Window control handlers
+ipcMain.on('window-control', (event, command) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win) return;
+
+    switch (command) {
+        case 'minimize':
+            win.minimize();
+            break;
+        case 'maximize':
+            if (win.isMaximized()) {
+                win.unmaximize();
+                event.reply('window-maximized', false);
+            } else {
+                win.maximize();
+                event.reply('window-maximized', true);
+            }
+            break;
+        case 'close':
+            win.close();
+            break;
+    }
 });
