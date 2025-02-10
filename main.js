@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, webContents } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 
@@ -17,9 +17,26 @@ function createWindow() {
             contextIsolation: false,
             webviewTag: true,
             webSecurity: true,
-            allowRunningInsecureContent: false
+            allowRunningInsecureContent: false,
+            devTools: true
         }
     });
+
+    // Enable dev tools for webviews
+    app.on('web-contents-created', (event, contents) => {
+        if (contents.getType() === 'webview') {
+            contents.on('dom-ready', () => {
+                contents.setWebRTCIPHandlingPolicy('default_public_interface_only');
+            });
+            contents.on('devtools-opened', () => {
+                contents.devToolsWebContents?.focus();
+            });
+        }
+    });
+
+    // Enable dev tools globally
+    app.commandLine.appendSwitch('auto-detect-utf8', 'true');
+    app.commandLine.appendSwitch('enable-features', 'NetworkService,NetworkServiceInProcess');
 
     mainWindow.loadFile('index.html');
     
@@ -66,20 +83,45 @@ function createWindow() {
 }
 
 // Handle bookmarks
-let bookmarks = new Set(store.get('bookmarks') || []);
+const defaultBookmarks = {
+    'favorites-bar': [],
+    'tech': [],
+    'government': [],
+    'business': [],
+    'social': [],
+    'lifestyle': [],
+    'family': [],
+    'shopping': [],
+    'health': [],
+    'finance': []
+};
 
-ipcMain.on('add-bookmark', (event, url) => {
-    bookmarks.add(url);
-    store.set('bookmarks', Array.from(bookmarks));
+let bookmarks = store.get('bookmarks') || defaultBookmarks;
+
+ipcMain.on('add-bookmark', (event, { folder, bookmark }) => {
+    if (!bookmarks[folder]) {
+        bookmarks[folder] = [];
+    }
+    
+    // Remove bookmark if it exists in any folder
+    Object.keys(bookmarks).forEach(f => {
+        bookmarks[f] = bookmarks[f].filter(b => b.url !== bookmark.url);
+    });
+    
+    // Add to selected folder
+    bookmarks[folder].push(bookmark);
+    store.set('bookmarks', bookmarks);
 });
 
 ipcMain.on('remove-bookmark', (event, url) => {
-    bookmarks.delete(url);
-    store.set('bookmarks', Array.from(bookmarks));
+    Object.keys(bookmarks).forEach(folder => {
+        bookmarks[folder] = bookmarks[folder].filter(b => b.url !== url);
+    });
+    store.set('bookmarks', bookmarks);
 });
 
 ipcMain.on('get-bookmarks', (event) => {
-    event.reply('bookmarks', Array.from(bookmarks));
+    event.reply('bookmarks', bookmarks);
 });
 
 // Handle history
@@ -96,6 +138,16 @@ ipcMain.on('add-history', (event, url) => {
 
 ipcMain.on('get-history', (event) => {
     event.reply('history', history);
+});
+
+// Handle devtools
+ipcMain.on('toggle-devtools', (event) => {
+    const sender = event.sender;
+    if (sender.isDevToolsOpened()) {
+        sender.closeDevTools();
+    } else {
+        sender.openDevTools({ mode: 'right' });
+    }
 });
 
 app.whenReady().then(() => {

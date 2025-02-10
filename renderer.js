@@ -14,7 +14,18 @@ class Browser {
         this.customRPC = '';
         this.chainId = '';
         this.explorerUrl = '';
-        this.bookmarks = new Set();
+        this.bookmarks = {
+            'favorites-bar': [],
+            'tech': [],
+            'government': [],
+            'business': [],
+            'social': [],
+            'lifestyle': [],
+            'family': [],
+            'shopping': [],
+            'health': [],
+            'finance': []
+        };
         
         this.initializeElements();
         this.setupEventListeners();
@@ -25,6 +36,7 @@ class Browser {
     initializeElements() {
         // Navigation controls
         this.urlBar = document.getElementById('url-bar');
+        this.urlLock = document.getElementById('url-lock');
         this.backBtn = document.getElementById('back-button');
         this.forwardBtn = document.getElementById('forward-button');
         this.refreshBtn = document.getElementById('refresh-button');
@@ -53,6 +65,11 @@ class Browser {
         this.chainIdInput = document.getElementById('chain-id');
         this.explorerInput = document.getElementById('explorer-url');
         this.updateNetworkBtn = document.getElementById('update-network');
+
+        // Bookmark elements
+        this.bookmarkDropdown = document.getElementById('bookmark-dropdown');
+        this.addBookmarkBtn = document.getElementById('add-bookmark-btn');
+        this.favoritesBar = document.getElementById('favorites-bar');
     }
 
     setupEventListeners() {
@@ -72,12 +89,25 @@ class Browser {
         this.devToolsBtn.addEventListener('click', () => {
             const webview = this.getActiveWebview();
             if (webview) {
-                webview.toggleDevTools();
+                try {
+                    webview.inspectElement(0, 0);
+                } catch (e) {
+                    console.error('DevTools error:', e);
+                }
             }
         });
 
-        // Bookmark event
+        // Bookmark events
         this.bookmarkBtn.addEventListener('click', () => this.toggleBookmark());
+        this.addBookmarkBtn.addEventListener('click', () => this.addBookmark());
+
+        // Close bookmark dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#bookmark-dropdown') && 
+                !e.target.closest('#bookmark-button')) {
+                this.bookmarkDropdown.classList.remove('visible');
+            }
+        });
 
         // Tab events
         this.newTabBtn.addEventListener('click', () => this.createNewTab());
@@ -117,7 +147,10 @@ class Browser {
         webview.setAttribute('id', tabId);
         webview.setAttribute('src', url);
         webview.setAttribute('autosize', 'on');
-        webview.setAttribute('webpreferences', 'contextIsolation=false');
+        webview.setAttribute('nodeintegration', 'on');
+        webview.setAttribute('webpreferences', 'javascript=yes, plugins=yes');
+        webview.setAttribute('allowpopups', 'yes');
+        webview.setAttribute('preload', 'preload.js');
         webview.style.minWidth = '900px';
         webview.style.minHeight = '600px';
         
@@ -136,6 +169,12 @@ class Browser {
             this.urlBar.value = e.url;
             ipcRenderer.send('add-history', e.url);
             this.updateBookmarkButton(e.url);
+            this.updateUrlLock(e.url);
+        });
+
+        webview.addEventListener('did-navigate-in-page', (e) => {
+            this.urlBar.value = e.url;
+            this.updateUrlLock(e.url);
         });
 
         // Append elements
@@ -196,6 +235,15 @@ class Browser {
             url = 'https://' + url;
         }
         this.getActiveWebview().loadURL(url);
+        this.updateUrlLock(url);
+    }
+
+    updateUrlLock(url) {
+        if (url.startsWith('https://')) {
+            this.urlLock.classList.add('visible');
+        } else {
+            this.urlLock.classList.remove('visible');
+        }
     }
 
     togglePanel(panel) {
@@ -225,25 +273,169 @@ class Browser {
     }
 
     async toggleBookmark() {
-        const url = this.getActiveWebview().getURL();
-        if (this.bookmarks.has(url)) {
-            this.bookmarks.delete(url);
-            this.bookmarkBtn.classList.remove('active');
-            ipcRenderer.send('remove-bookmark', url);
+        const dropdown = document.getElementById('bookmark-dropdown');
+        const webview = this.getActiveWebview();
+        const url = webview.getURL();
+        const title = webview.getTitle() || url;
+        
+        // Toggle dropdown visibility
+        if (dropdown.classList.contains('visible')) {
+            dropdown.classList.remove('visible');
         } else {
-            this.bookmarks.add(url);
-            this.bookmarkBtn.classList.add('active');
-            ipcRenderer.send('add-bookmark', url);
+            dropdown.classList.add('visible');
+            document.getElementById('bookmark-name').value = title;
+            
+            // Get favicon
+            try {
+                const faviconUrl = `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}`;
+                this.currentFavicon = faviconUrl;
+            } catch (e) {
+                this.currentFavicon = null;
+            }
         }
-        this.loadBookmarks();
     }
 
     updateBookmarkButton(url) {
-        if (this.bookmarks.has(url)) {
+        let isBookmarked = false;
+        for (const folder in this.bookmarks) {
+            if (this.bookmarks[folder] && Array.isArray(this.bookmarks[folder]) && 
+                this.bookmarks[folder].some(b => b.url === url)) {
+                isBookmarked = true;
+                break;
+            }
+        }
+        
+        if (isBookmarked) {
             this.bookmarkBtn.classList.add('active');
         } else {
             this.bookmarkBtn.classList.remove('active');
         }
+    }
+
+    addBookmark() {
+        const webview = this.getActiveWebview();
+        const url = webview.getURL();
+        const name = document.getElementById('bookmark-name').value;
+        const folder = document.getElementById('bookmark-folder').value;
+        
+        const bookmark = {
+            url,
+            name,
+            favicon: this.currentFavicon
+        };
+        
+        // Initialize folder if it doesn't exist
+        if (!this.bookmarks[folder]) {
+            this.bookmarks[folder] = [];
+        }
+        
+        // Remove existing bookmark with same URL from any folder
+        Object.keys(this.bookmarks).forEach(f => {
+            if (this.bookmarks[f] && Array.isArray(this.bookmarks[f])) {
+                this.bookmarks[f] = this.bookmarks[f].filter(b => b.url !== url);
+            }
+        });
+        
+        // Add new bookmark
+        this.bookmarks[folder].push(bookmark);
+        ipcRenderer.send('add-bookmark', { folder, bookmark });
+        
+        document.getElementById('bookmark-dropdown').classList.remove('visible');
+        this.updateBookmarkButton(url);
+        this.updateFavoritesBar();
+        this.loadBookmarks();
+    }
+
+    updateFavoritesBar() {
+        const favoritesBar = document.getElementById('favorites-bar');
+        favoritesBar.innerHTML = '';
+        
+        const visibleItems = [];
+        const overflowItems = [];
+        let totalWidth = 0;
+        const maxBarWidth = favoritesBar.offsetWidth - 50; // Leave space for overflow button
+        
+        // Create and measure items
+        if (this.bookmarks['favorites-bar'] && Array.isArray(this.bookmarks['favorites-bar'])) {
+            this.bookmarks['favorites-bar'].forEach(bookmark => {
+                const item = document.createElement('div');
+                item.className = 'favorite-item';
+                item.innerHTML = `
+                    ${bookmark.favicon ? `<img src="${bookmark.favicon}" alt="">` : ''}
+                    <span>${bookmark.name}</span>
+                `;
+                item.onclick = () => this.createNewTab(bookmark.url);
+                
+                // Temporarily add to measure
+                favoritesBar.appendChild(item);
+                const itemWidth = item.offsetWidth;
+                favoritesBar.removeChild(item);
+                
+                if (totalWidth + itemWidth <= maxBarWidth) {
+                    visibleItems.push(item);
+                    totalWidth += itemWidth + 5; // 5px for gap
+                } else {
+                    overflowItems.push(bookmark);
+                }
+            });
+        }
+        
+        // Add visible items
+        visibleItems.forEach(item => favoritesBar.appendChild(item));
+        
+        // Add overflow button if needed
+        if (overflowItems.length > 0) {
+            const overflowButton = document.createElement('div');
+            overflowButton.className = 'favorites-overflow';
+            overflowButton.innerHTML = `
+                <i class="fas fa-chevron-double-right"></i>
+                <div class="favorites-overflow-dropdown"></div>
+            `;
+            
+            const dropdown = overflowButton.querySelector('.favorites-overflow-dropdown');
+            overflowItems.forEach(bookmark => {
+                const item = document.createElement('div');
+                item.className = 'favorite-item';
+                item.innerHTML = `
+                    ${bookmark.favicon ? `<img src="${bookmark.favicon}" alt="">` : ''}
+                    <span>${bookmark.name}</span>
+                `;
+                item.onclick = () => this.createNewTab(bookmark.url);
+                dropdown.appendChild(item);
+            });
+            
+            favoritesBar.appendChild(overflowButton);
+        }
+        
+        // Add folder items
+        Object.keys(this.bookmarks).forEach(folder => {
+            if (folder === 'favorites-bar') return;
+            
+            if (this.bookmarks[folder] && Array.isArray(this.bookmarks[folder]) && 
+                this.bookmarks[folder].length > 0) {
+                const folderItem = document.createElement('div');
+                folderItem.className = 'favorite-item favorite-folder';
+                folderItem.innerHTML = `
+                    <i class="fas fa-folder"></i>
+                    <span>${folder.charAt(0).toUpperCase() + folder.slice(1)}</span>
+                    <div class="folder-dropdown"></div>
+                `;
+                
+                const dropdown = folderItem.querySelector('.folder-dropdown');
+                this.bookmarks[folder].forEach(bookmark => {
+                    const item = document.createElement('div');
+                    item.className = 'favorite-item';
+                    item.innerHTML = `
+                        ${bookmark.favicon ? `<img src="${bookmark.favicon}" alt="">` : ''}
+                        <span>${bookmark.name}</span>
+                    `;
+                    item.onclick = () => this.createNewTab(bookmark.url);
+                    dropdown.appendChild(item);
+                });
+                
+                favoritesBar.appendChild(folderItem);
+            }
+        });
     }
 
     async connectWallet() {
@@ -283,12 +475,24 @@ class Browser {
     async loadBookmarks() {
         ipcRenderer.send('get-bookmarks');
         ipcRenderer.once('bookmarks', (event, bookmarks) => {
-            this.bookmarks = new Set(bookmarks);
-            this.bookmarksPanel.innerHTML = bookmarks.map(url => `
-                <div class="bookmark">
-                    <a href="#" onclick="window.browser.createNewTab('${url}')">${url}</a>
+            this.bookmarks = bookmarks;
+            
+            // Update bookmarks panel
+            this.bookmarksPanel.innerHTML = Object.entries(bookmarks).map(([folder, items]) => `
+                <div class="bookmark-folder">
+                    <h3>${folder.charAt(0).toUpperCase() + folder.slice(1)}</h3>
+                    ${items.map(bookmark => `
+                        <div class="bookmark">
+                            <a href="#" onclick="window.browser.createNewTab('${bookmark.url}')">
+                                ${bookmark.favicon ? `<img src="${bookmark.favicon}" alt="" width="16" height="16">` : ''}
+                                ${bookmark.name}
+                            </a>
+                        </div>
+                    `).join('')}
                 </div>
             `).join('');
+            
+            this.updateFavoritesBar();
             this.updateBookmarkButton(this.getActiveWebview()?.getURL());
         });
     }
@@ -308,7 +512,6 @@ class Browser {
     }
 }
 
-// Initialize browser when DOM is loaded
 // Window controls
 document.getElementById('minimize-button').addEventListener('click', () => {
     ipcRenderer.send('window-control', 'minimize');

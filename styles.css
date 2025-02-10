@@ -28,12 +28,13 @@ html, body {
     background: #c44901;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .navigation-controls {
     display: flex;
     gap: 5px;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
 }
 
 .navigation-controls button {
@@ -67,9 +68,16 @@ html, body {
     font-weight: 900;
 }
 
+.url-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
 #url-bar {
     flex: 1;
-    padding: 5px 10px;
+    padding: 5px 10px 5px 32px;
     border: 1px solid #893200;
     border-radius: 4px;
     background: #933600;
@@ -78,6 +86,184 @@ html, body {
 
 #url-bar::placeholder {
     color: rgba(255, 255, 255, 0.7);
+}
+
+.url-lock {
+    position: absolute;
+    left: 10px;
+    color: #fff;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.url-lock.visible {
+    opacity: 1;
+}
+
+.bookmark-dropdown {
+    display: none;
+    position: absolute;
+    top: 50px;
+    right: 120px;
+    background: #050505;
+    border: 1px solid #161616;
+    border-radius: 4px;
+    padding: 10px;
+    z-index: 1000;
+    width: 300px;
+}
+
+.bookmark-dropdown.visible {
+    display: block;
+}
+
+.bookmark-dropdown-header {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.bookmark-dropdown input,
+.bookmark-dropdown select {
+    padding: 6px;
+    background: #161616;
+    border: 1px solid #893200;
+    border-radius: 4px;
+    color: #fff;
+}
+
+.bookmark-dropdown input {
+    flex: 1;
+}
+
+.bookmark-dropdown select {
+    width: 120px;
+}
+
+#add-bookmark-btn {
+    padding: 6px 12px;
+    background: #933600;
+    border: 1px solid #893200;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+}
+
+#add-bookmark-btn:hover {
+    background: #7f2e00;
+}
+
+.favorites-bar {
+    display: flex;
+    gap: 5px;
+    padding: 5px 10px;
+    background: transparent;
+    margin-bottom: 10px;
+    min-height: 32px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.favorites-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.favorite-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: rgba(22, 22, 22, 0.8);
+    border-radius: 4px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    max-width: 100px;
+}
+
+.favorite-item span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.favorites-overflow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: rgba(22, 22, 22, 0.8);
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.favorites-overflow:hover {
+    background: #933600;
+}
+
+.favorites-overflow-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #070707;
+    border: 1px solid #161616;
+    border-radius: 4px;
+    padding: 5px;
+    z-index: 1000;
+    min-width: 200px;
+}
+
+.favorites-overflow-dropdown .favorite-item {
+    max-width: none;
+    width: 100%;
+    margin: 2px 0;
+    color: #c44901;
+}
+
+.favorites-overflow:hover .favorites-overflow-dropdown {
+    display: block;
+}
+
+.favorite-item:hover {
+    background: #933600;
+}
+
+.favorite-item img {
+    width: 16px;
+    height: 16px;
+}
+
+.favorite-folder {
+    position: relative;
+}
+
+.favorite-folder:hover .folder-dropdown {
+    display: block;
+}
+
+.folder-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #050505;
+    border: 1px solid #161616;
+    border-radius: 4px;
+    padding: 5px;
+    z-index: 1000;
+    min-width: 200px;
+}
+
+.folder-dropdown .favorite-item {
+    width: 100%;
+    margin: 2px 0;
 }
 
 .tab-controls {
@@ -123,9 +309,10 @@ html, body {
 }
 
 .tab.active {
-    background: linear-gradient(to bottom, #933600, #c44901);
+    background: #050505;
     border-bottom: none;
     z-index: 1;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .tab-title {
@@ -448,6 +635,24 @@ html, body {
     position: relative;
     background: #fff;
     display: flex;
+    overflow: hidden;
+}
+
+#webviews-container::-webkit-scrollbar {
+    width: 12px;
+}
+
+#webviews-container::-webkit-scrollbar-track {
+    background: #050505;
+}
+
+#webviews-container::-webkit-scrollbar-thumb {
+    background: #c44901;
+    border-radius: 6px;
+}
+
+#webviews-container::-webkit-scrollbar-thumb:hover {
+    background: #933600;
 }
 
 webview {
@@ -456,6 +661,23 @@ webview {
     width: 100%;
     height: calc(100vh - 100px);
     border: none;
+}
+
+webview::-webkit-scrollbar {
+    width: 12px;
+}
+
+webview::-webkit-scrollbar-track {
+    background: #050505;
+}
+
+webview::-webkit-scrollbar-thumb {
+    background: #c44901;
+    border-radius: 6px;
+}
+
+webview::-webkit-scrollbar-thumb:hover {
+    background: #933600;
 }
 
 webview.active {

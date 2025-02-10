@@ -20,10 +20,34 @@
                 <button id="back-button"><i class="fas fa-chevron-left"></i></button>
                 <button id="forward-button"><i class="fas fa-chevron-right"></i></button>
                 <button id="refresh-button"><i class="fas fa-sync"></i></button>
-                <input type="text" id="url-bar" placeholder="Enter URL">
+                <div class="url-container">
+                    <span id="url-lock" class="url-lock"><i class="fas fa-lock"></i></span>
+                    <input type="text" id="url-bar" placeholder="Enter URL">
+                </div>
                 <button id="go-button"><i class="fas fa-arrow-right"></i></button>
                 <button id="bookmark-button"><i class="far fa-star"></i></button>
                 <button id="devtools-button"><i class="fas fa-tools"></i></button>
+            </div>
+            <div class="bookmark-dropdown" id="bookmark-dropdown">
+                <div class="bookmark-dropdown-header">
+                    <input type="text" id="bookmark-name" placeholder="Name">
+                    <select id="bookmark-folder">
+                        <option value="favorites-bar">Favorites Bar</option>
+                        <option value="tech">Tech</option>
+                        <option value="government">Government</option>
+                        <option value="business">Business</option>
+                        <option value="social">Social</option>
+                        <option value="lifestyle">Lifestyle</option>
+                        <option value="family">Family</option>
+                        <option value="shopping">Shopping</option>
+                        <option value="health">Health</option>
+                        <option value="finance">Finance</option>
+                    </select>
+                    <button id="add-bookmark-btn">Add</button>
+                </div>
+            </div>
+            <div class="favorites-bar" id="favorites-bar">
+                <!-- Favorites will be dynamically added here -->
             </div>
             <div class="tab-controls">
                 <div id="tabs-container"></div>
